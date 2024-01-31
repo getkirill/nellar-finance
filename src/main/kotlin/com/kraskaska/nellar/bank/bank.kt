@@ -67,14 +67,14 @@ object BankDeserializer : StdDeserializer<Bank>(Bank::class.java) {
     override fun deserialize(json: JsonParser, deserializationContext: DeserializationContext): Bank {
         val node = json.readValueAsTree<JsonNode>()
         if (!node.has("version")) {
-            throw Exception("No version found while deserializing! Preser NekoDollar?")
+            throw IllegalArgumentException("No version found while deserializing! Preser NekoDollar?")
         }
-        if (!node.get("version").isLong) {
-            throw Exception("Invalid version: not a number")
+        if (!node.get("version").isNumber) {
+            throw IllegalArgumentException("Invalid version: not a number")
         }
         val version = node.get("version").numberValue().toLong()
         if (version != 1L) {
-            throw Exception("Invalid version: expected 1, got $version")
+            throw IllegalArgumentException("Invalid version: expected 1, got $version")
         }
         val actors = node.get("actors").map { Actor(cbor.treeToValue(it, UUID::class.java)) }.toMutableList()
         val promises = node.get("promises").map {

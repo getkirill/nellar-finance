@@ -4,6 +4,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.kraskaska.nellar.bank.Actor
 import com.kraskaska.nellar.bank.Bank
 import com.kraskaska.nellar.bank.Transaction
+import com.kraskaska.nellar.legacy.preser.migrate
 import com.kraskaska.nellar.util.cbor
 import picocli.CommandLine
 import picocli.CommandLine.*
@@ -28,10 +29,16 @@ object BankCLI : Runnable {
     var storageLocation = File("./bank.neko")
     val bank = try {
         cbor.readValue<Bank>(storageLocation)
+    } catch (e: IllegalArgumentException) {
+        e.printStackTrace()
+        println("trying to migrate...")
+        val old = cbor.readValue<com.kraskaska.nellar.legacy.preser.Bank>(storageLocation)
+        migrate(old)
     } catch (e: FileNotFoundException) {
         println("Bank doesn't exist, making new one...")
         Bank()
     }
+
     override fun run() {
         println("hello :3")
         println("use one of the other cool command pwease :3")
@@ -71,7 +78,7 @@ object CLIListActors : Runnable {
     lateinit var parent: BankCLI
     override fun run() {
         println("All actors:")
-        println("Ethereal: ${BankCLI.bank.etherealActor}")
+//        println("Ethereal: ${BankCLI.bank.etherealActor}")
         println(BankCLI.bank.actors.joinToString("\n") { it.toString(BankCLI.bank) })
     }
 }
@@ -135,7 +142,7 @@ object CLIListPromises : Runnable {
             BankCLI.bank.promises.filter { !listUnfulfilled || !it.isFulfilled(BankCLI.bank) }
         }
         println("${if (listUnfulfilled) "Unfulfilled p" else "P"}romises${if (actor != null) " for $actor" else ""}:")
-        println(promises.joinToString("\n") {"$it (${it.getFulfilled(BankCLI.bank)})"})
+        println(promises.joinToString("\n") { "$it (${it.getFulfilled(BankCLI.bank)})" })
     }
 }
 
@@ -175,7 +182,10 @@ object CLITransact : Runnable {
     }
 }
 
-@Command(name = "deposit", description = ["deposit money - makes an instant promise from ethereal account for that amount of money (because we cannot transact without promise)"])
+@Command(
+    name = "deposit",
+    description = ["deposit money - makes an instant promise from ethereal account for that amount of money (because we cannot transact without promise)"]
+)
 object CLIDeposit : Runnable {
     @ParentCommand
     lateinit var parent: BankCLI
@@ -191,7 +201,10 @@ object CLIDeposit : Runnable {
     }
 }
 
-@Command(name = "withdraw", description = ["withdraw money - makes an instant promise to ethereal account for that amount of money (because we cannot transact without promise)"])
+@Command(
+    name = "withdraw",
+    description = ["withdraw money - makes an instant promise to ethereal account for that amount of money (because we cannot transact without promise)"]
+)
 object CLIWithdraw : Runnable {
     @ParentCommand
     lateinit var parent: BankCLI
