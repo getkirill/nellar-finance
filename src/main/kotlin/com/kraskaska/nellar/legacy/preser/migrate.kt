@@ -23,7 +23,9 @@ fun migrate(bank: Bank): com.kraskaska.nellar.bank.Bank {
             else -> throw Exception()
         }
     }.toMutableList()
+    println("Migrating actors!")
     val migratedActors = bank.actors.filter { it != bank.etherealActor }.map { com.kraskaska.nellar.bank.Actor(it.id) }.toMutableList()
+    println("Migrating transactions!")
     val migratedTransactions = bank.transactions.map {
         com.kraskaska.nellar.bank.Transaction(
             it.id,
