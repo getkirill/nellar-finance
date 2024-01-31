@@ -1,6 +1,10 @@
-package com.kraskaska.nekodollar
+package com.kraskaska.nellar.cli
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.kraskaska.nellar.bank.Actor
+import com.kraskaska.nellar.bank.Bank
+import com.kraskaska.nellar.bank.Transaction
+import com.kraskaska.nellar.util.cbor
 import picocli.CommandLine
 import picocli.CommandLine.*
 import java.io.File
@@ -16,7 +20,7 @@ object CLIActorConverter : ITypeConverter<Actor> {
 @Command(
     name = "bank-cli",
     description = ["handle bank stuffs"],
-    subcommands = [/*CLIDebugPrintEtherealActor::class, */CLICreateActor::class, CLIListActors::class, CLIPromise::class, CLIListPromises::class, CLITransact::class, CLIDeposit::class, CLIWithdraw::class, CLIListTransactions::class],
+    subcommands = [CLICreateActor::class, CLIListActors::class, CLIPromise::class, CLIListPromises::class, CLITransact::class, CLIDeposit::class, CLIWithdraw::class, CLIListTransactions::class],
     mixinStandardHelpOptions = true
 )
 object BankCLI : Runnable {
@@ -55,7 +59,7 @@ object CLICreateActor : Runnable {
     @ParentCommand
     lateinit var parent: BankCLI
     override fun run() {
-        val actor = Actor.make().apply { submit(parent.bank) }
+        val actor = Actor.make().apply { submit(BankCLI.bank) }
         println("New actor was created!")
         println(actor)
     }
@@ -67,8 +71,8 @@ object CLIListActors : Runnable {
     lateinit var parent: BankCLI
     override fun run() {
         println("All actors:")
-        println("Ethereal: ${parent.bank.etherealActor}")
-        println(parent.bank.actors.joinToString("\n") { it.toString(parent.bank) })
+        println("Ethereal: ${BankCLI.bank.etherealActor}")
+        println(BankCLI.bank.actors.joinToString("\n") { it.toString(BankCLI.bank) })
     }
 }
 
@@ -96,12 +100,12 @@ object CLIPromise : Runnable {
     override fun run() {
         when (promiseType) {
             PromiseType.INSTANT -> {
-                from.instantPromiseTo(to, parent.bank, amount)
+                from.instantPromiseTo(to, BankCLI.bank, amount)
                 println("Successfully made promise!")
             }
 
             PromiseType.INDEFINITE -> {
-                val promise = from.indefinitePromiseTo(to, parent.bank, amount)
+                val promise = from.indefinitePromiseTo(to, BankCLI.bank, amount)
                 println("Successfully made promise!")
                 println(promise)
             }
@@ -122,16 +126,16 @@ object CLIListPromises : Runnable {
     override fun run() {
         val promises = if (actor != null) {
             // if we have unfulfilled flag we probably don't want to know unfulfilled promises TO specified actor
-            parent.bank.promises.filter {
+            BankCLI.bank.promises.filter {
                 (it.from == actor || (!listUnfulfilled && it.to == actor)) && (!listUnfulfilled || !it.isFulfilled(
-                    parent.bank
+                    BankCLI.bank
                 ))
             }
         } else {
-            parent.bank.promises.filter { !listUnfulfilled || !it.isFulfilled(parent.bank) }
+            BankCLI.bank.promises.filter { !listUnfulfilled || !it.isFulfilled(BankCLI.bank) }
         }
         println("${if (listUnfulfilled) "Unfulfilled p" else "P"}romises${if (actor != null) " for $actor" else ""}:")
-        println(promises.joinToString("\n") {"$it (${it.getFulfilled(parent.bank)})"})
+        println(promises.joinToString("\n") {"$it (${it.getFulfilled(BankCLI.bank)})"})
     }
 }
 
@@ -144,11 +148,11 @@ object CLIListTransactions : Runnable {
     var actor: Actor? = null;
     override fun run() {
         val promises = if (actor != null) {
-            parent.bank.transactions.filter {
+            BankCLI.bank.transactions.filter {
                 it.fulfills.from == actor || it.fulfills.to == actor
             }
         } else {
-            parent.bank.transactions
+            BankCLI.bank.transactions
         }
         println("Transactions${if (actor != null) " for $actor" else ""}:")
         println(promises.joinToString("\n"))
@@ -166,7 +170,7 @@ object CLITransact : Runnable {
     @Parameters(index = "1")
     var amount: Long = 0
     override fun run() {
-        Transaction.of(parent.bank.findPromise(promise), amount).submit(parent.bank)
+        Transaction.of(BankCLI.bank.findPromise(promise), amount).submit(BankCLI.bank)
         println("Success!")
     }
 }
@@ -182,7 +186,7 @@ object CLIDeposit : Runnable {
     @Parameters(index = "1")
     var amount: Long = 0
     override fun run() {
-        actor.deposit(parent.bank, amount)
+        actor.deposit(BankCLI.bank, amount)
         println("Success!")
     }
 }
@@ -198,7 +202,7 @@ object CLIWithdraw : Runnable {
     @Parameters(index = "1")
     var amount: Long = 0
     override fun run() {
-        actor.withdraw(parent.bank, amount)
+        actor.withdraw(BankCLI.bank, amount)
         println("Success!")
     }
 }

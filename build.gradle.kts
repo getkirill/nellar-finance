@@ -5,7 +5,7 @@ plugins {
     application
 }
 
-group = "com.kraskaska"
+group = "com.kraskaska.nellar"
 version = "1.0-SNAPSHOT"
 
 repositories {
@@ -25,7 +25,7 @@ dependencies {
 }
 
 application {
-    mainClass.set("com.kraskaska.nekodollar.MainKt")
+    mainClass.set("com.kraskaska.nellar.cli.MainKt")
 }
 
 kapt {

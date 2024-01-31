@@ -1,5 +1,6 @@
-package com.kraskaska.nekodollar
+package com.kraskaska.nellar.legacy.preser
 
+import com.kraskaska.nellar.util.uuid
 import java.util.*
 
 data class Actor(val id: UUID) {

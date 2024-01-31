@@ -1,8 +1,9 @@
-package com.kraskaska.nekodollar
+package com.kraskaska.nellar.bank
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.kraskaska.nellar.util.uuid
 import java.util.UUID
 
 @JsonIgnoreProperties(ignoreUnknown = true)
