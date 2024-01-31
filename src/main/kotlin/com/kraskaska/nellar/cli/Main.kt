@@ -21,7 +21,17 @@ object CLIActorConverter : ITypeConverter<Actor> {
 @Command(
     name = "bank-cli",
     description = ["handle bank stuffs"],
-    subcommands = [CLICreateActor::class, CLIListActors::class, CLIPromise::class, CLIListPromises::class, CLITransact::class, CLIDeposit::class, CLIWithdraw::class, CLIListTransactions::class],
+    subcommands = [
+        CLICreateActor::class,
+        CLIListActors::class,
+        CLIPromise::class,
+        CLIListPromises::class,
+        CLITransact::class,
+        CLIDeposit::class,
+        CLIWithdraw::class,
+        CLIListTransactions::class,
+        CLIBalance::class
+    ],
     mixinStandardHelpOptions = true
 )
 object BankCLI : Runnable {
@@ -217,6 +227,24 @@ object CLIWithdraw : Runnable {
     override fun run() {
         actor.withdraw(BankCLI.bank, amount)
         println("Success!")
+    }
+}
+
+@Command(
+    name = "balance",
+    description = ["shows balance (normal and actual)"]
+)
+object CLIBalance : Runnable {
+    @ParentCommand
+    lateinit var parent: BankCLI
+
+    @Parameters(index = "0")
+    lateinit var actor: Actor
+    override fun run() {
+        println("Balance of $actor")
+        println("Balance: ${actor.getBalance(parent.bank)}")
+        println("Actual balance: ${actor.getActualBalance(parent.bank)}")
+        println("Difference (n-a): ${actor.getBalance(parent.bank) - actor.getActualBalance(parent.bank)}")
     }
 }
 
